@@ -33,14 +33,43 @@ The **goal** of vetiver is to provide fluent tooling to **version, deploy, and m
 Let's build a model to predict which [Scooby Doo episodes](https://github.com/rfordatascience/tidytuesday/blob/master/data/2021/2021-07-13/readme.md) have a _real_ monster and which have a _fake_ monster.
 
 
+```{r}
+
+# Get the Data
+
+scoobydoo <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-07-13/scoobydoo.csv')
+
+arrow::write_feather(
+  scoobydoo |>
+    dplyr::mutate(
+        year_aired = as.numeric(substr(as.character(date_aired), start = 1, stop = 4))
+    ) |>
+    dplyr::select(
+        monster_real,
+        year_aired,
+        imdb,
+        title
+    ) |>
+    dplyr::filter(
+        imdb != "NULL"
+    ),
+  'scooby-do.arrow',
+  version = 2,
+  chunk_size = 65536L,
+  compression = "uncompressed",
+  compression_level = NULL
+)
+
+```
+
 
 ```{python}
 import os
-from dotenv import load_dotenv, find_dotenv
-load_dotenv(find_dotenv())
-
-api_key = os.getenv("API_KEY")
-rsc_url = os.getenv("RSC_URL")
+# from dotenv import load_dotenv, find_dotenv
+# load_dotenv(find_dotenv())
+#
+# api_key = os.getenv("API_KEY")
+# rsc_url = os.getenv("RSC_URL")
 ```
 
 ```{python}
@@ -81,11 +110,11 @@ Version and share the model:
 
 ```{python}
 #| eval: false
-import pins
-# could be board_s3, board_azure, board_folder, etc
-board = pins.board_rsconnect(api_key=api_key, server_url=rsc_url, allow_pickle_read=True) 
-
-#vetiver.vetiver_pin_write(board, v)
+# import pins
+# # could be board_s3, board_azure, board_folder, etc
+# board = pins.board_rsconnect(api_key=api_key, server_url=rsc_url, allow_pickle_read=True)
+#
+# #vetiver.vetiver_pin_write(board, v)
 ```
 
 Document the model: <https://vetiver.rstudio.com/learn-more/model-card.html>
@@ -104,9 +133,9 @@ import rsconnect
 connect_server = rsconnect.api.RSConnectServer(url = rsc_url, api_key = api_key)
 
 vetiver.deploy_rsconnect(
-    connect_server = connect_server, 
-    board = board, 
-    pin_name = "isabel.zimmerman/scooby-doo", 
+    connect_server = connect_server,
+    board = board,
+    pin_name = "isabel.zimmerman/scooby-doo",
 )
 ```
 
@@ -117,14 +146,17 @@ Predict for remote vetiver model:
 
 
 ```{python}
-connect_endpoint = vetiver.vetiver_endpoint("https://colorado.rstudio.com/rsc/scooby/predict")
+# connect_endpoint = vetiver.vetiver_endpoint("https://colorado.rstudio.com/rsc/scooby/predict")
+connect_endpoint = vetiver.vetiver_endpoint("http://127.0.0.1:8000/predict")
 ```
 
 ```{python}
 new_episodes = pd.DataFrame(
-  {'year_aired': np.random.randint(1970, 2000, size=(5,)),
-  'imdb': np.random.randint(5, 9, size=(5,))}
+  {'year_aired': str(np.random.randint(1970, 2000, size=(1,))[0]),
+  'imdb': str(np.random.randint(5, 9, size=(1,))[0])},
+  index=[0]
 )
+
 new_episodes
 ```
 

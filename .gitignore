@@ -7,5 +7,8 @@ Dockerfile
 plumber.R
 vetiver_renv.lock
 
-/.quarto/
+.idea
+.quarto/
 _site/
+*.arrow
+*.html
